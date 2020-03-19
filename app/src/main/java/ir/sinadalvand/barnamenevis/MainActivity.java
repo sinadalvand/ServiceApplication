@@ -28,6 +28,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        Intent intentService = new Intent(MainActivity.this,DownloadService.class);
+        stopService(intentService);
+
 
 
 

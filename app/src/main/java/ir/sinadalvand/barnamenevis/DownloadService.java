@@ -45,10 +45,13 @@ public class DownloadService extends Service {
 
                 download(finalUrl,"");
 
+                stopSelf();
+
+
             }
         }).start();
 
-        return super.onStartCommand(intent, flags, startId);
+        return START_REDELIVER_INTENT;
     }
 
     public void download(String url,String path){
@@ -75,6 +78,14 @@ public class DownloadService extends Service {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        Log.e("DownloadService","DownloadService");
+
     }
 
     @Nullable
