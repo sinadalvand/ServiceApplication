@@ -21,7 +21,8 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".DownloadIntentService"/>
+        <service android:name=".DownloadIntentService" />
+        <service android:name=".DownloadService" />
     </application>
 
 </manifest>

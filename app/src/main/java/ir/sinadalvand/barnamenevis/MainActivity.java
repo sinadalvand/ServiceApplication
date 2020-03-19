@@ -2,6 +2,7 @@ package ir.sinadalvand.barnamenevis;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.IntentService;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -20,7 +21,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                startService(new Intent(MainActivity.this,DownloadIntentService.class));
+                Intent intentService = new Intent(MainActivity.this,DownloadService.class);
+                intentService.putExtra(DownloadService.Url_KEY,"http://dl.barato.ir/app/QuickPic_5.0.0(BaraTo.iR).apk");
+                startService(intentService);
 
             }
         });
