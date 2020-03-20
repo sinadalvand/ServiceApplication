@@ -1,12 +1,16 @@
 package ir.sinadalvand.barnamenevis;
 
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -19,10 +23,14 @@ import java.net.URLConnection;
 public class DownloadService extends Service {
 
     public static String Url_KEY = "URL_KEY";
+    private final int NOTIF_ID = 124;
+    private final String CHANEL_ID = "DOWNLOAD_CHANNEL";
+    private NotificationManager notifmanager;
 
     @Override
     public void onCreate() {
         super.onCreate();
+        notifmanager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
         Log.e("DownloadService", "onCreate");
     }
@@ -43,18 +51,20 @@ public class DownloadService extends Service {
             public void run() {
 
 
-                download(finalUrl,"");
-
-                stopSelf();
+                startForeground(NOTIF_ID, getNotification(0));
+                download(finalUrl, "");
+                stopForeground(false);
+//                stopSelf();
 
 
             }
         }).start();
 
+
         return START_REDELIVER_INTENT;
     }
 
-    public void download(String url,String path){
+    public void download(String url, String path) {
         try {
             URL u = new URL(url);
             URLConnection conn = u.openConnection();
@@ -69,7 +79,11 @@ public class DownloadService extends Service {
             while ((count = stream.read(data)) != -1) {
                 total += count;
                 if (contentLength > 0) {
-                    Log.e("Downloader","Percent: "+((int) (total * 100 / contentLength)));
+                    int percent = ((int) (total * 100 / contentLength));
+                    Log.e("Downloader", "Percent: " + percent);
+
+                    notifmanager.notify(NOTIF_ID, getNotification(percent));
+
                 }
                 fos.write(data, 0, count);
             }
@@ -84,8 +98,16 @@ public class DownloadService extends Service {
     public void onDestroy() {
         super.onDestroy();
 
-        Log.e("DownloadService","DownloadService");
+        Log.e("DownloadService", "DownloadService");
 
+    }
+
+    private Notification getNotification(int percent) {
+        return new NotificationCompat.Builder(this, CHANEL_ID)
+                .setContentTitle("Download Manager")
+                .setContentText(String.format("%d Percent Downloaded!", percent))
+                .setSmallIcon(R.drawable.ic_download)
+                .build();
     }
 
     @Nullable
