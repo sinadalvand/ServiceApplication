@@ -1,6 +1,9 @@
 package ir.sinadalvand.barnamenevis;
 
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.Environment;
@@ -8,6 +11,7 @@ import android.os.IBinder;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -22,11 +26,16 @@ public class DownloadBoundedService extends Service {
     private final String TAG = "DownloadBoundedService";
     private DownloadBinder binder = new DownloadBinder();
     private DownloadListener downloadListener = null;
+    private final int NOTIF_ID = 124;
+    private boolean isBounded = false;
+    private NotificationManager notifmanager;
+
 
     @Override
     public void onCreate() {
         super.onCreate();
         Log.e(TAG, "onCreate");
+        notifmanager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
     }
 
     @Override
@@ -39,19 +48,25 @@ public class DownloadBoundedService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         Log.e(TAG, "onBind");
+        isBounded = true;
+        stopForeground(true);
         return binder;
     }
 
     @Override
     public void onRebind(Intent intent) {
         super.onRebind(intent);
+        isBounded = true;
+        stopForeground(true);
         Log.e(TAG, "onRebind");
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
         Log.e(TAG, "onUnbind");
-        return super.onUnbind(intent);
+        isBounded = false;
+        startForeground(NOTIF_ID, getNotification(0));
+        return true;
     }
 
     @Override
@@ -63,15 +78,17 @@ public class DownloadBoundedService extends Service {
     class DownloadBinder extends Binder {
 
         void startDownload(final String url) {
+            startService(new Intent(DownloadBoundedService.this, DownloadBoundedService.class));
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     download(url);
+                    stopSelf();
                 }
             }).start();
         }
 
-        void setDownloadListener(DownloadListener listener){
+        void setDownloadListener(DownloadListener listener) {
             downloadListener = listener;
         }
 
@@ -99,7 +116,10 @@ public class DownloadBoundedService extends Service {
                     int percent = ((int) (total * 100 / contentLength));
                     Log.e("Downloader", "Percent: " + percent);
 
-                    if(downloadListener!=null){
+                    if (!isBounded)
+                        notifmanager.notify(NOTIF_ID, getNotification(percent));
+
+                    if (downloadListener != null) {
                         downloadListener.downloadedPercent(percent);
                     }
                 }
@@ -110,5 +130,13 @@ public class DownloadBoundedService extends Service {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private Notification getNotification(int percent) {
+        return new NotificationCompat.Builder(this, "CHANEL_ID")
+                .setContentTitle("Download Manager")
+                .setContentText(String.format("%d Percent Downloaded!", percent))
+                .setSmallIcon(R.drawable.ic_download)
+                .build();
     }
 }

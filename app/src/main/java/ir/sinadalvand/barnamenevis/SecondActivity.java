@@ -46,7 +46,7 @@ public class SecondActivity extends AppCompatActivity implements DownloadBounded
             @Override
             public void onClick(View v) {
                 if (binder != null)
-                    binder.startDownload("http://dl.barato.ir/app/QuickPic_5.0.0(BaraTo.iR).apk");
+                    binder.startDownload("https://dlcdnets.asus.com/pub/ASUS/nb/Apps_for_Win10/Splendid/Splendid_Upgrade_Win10_VER3130004.zip");
             }
         });
 
